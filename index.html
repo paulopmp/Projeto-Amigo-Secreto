@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎁 Sorteio de Amigo Secreto</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .container {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 1;
+  }
+
+  .subtitle {
+    text-align: center;
+    opacity: 0.9;
+    margin-bottom: 30px;
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step {
+    display: none;
+    animation: fadeIn 0.5s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+
+  input[type="number"],
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+  }
+
+  input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  input:focus {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+
+  .input-group {
+    margin-bottom: 15px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    box-shadow: 0 8px 20px rgba(238, 90, 111, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(238, 90, 111, 0.5);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+  }
+
+  .participants-list {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 20px 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .participant-item {
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .participant-item .number {
+    background: rgba(255, 255, 255, 0.3);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+
+  .draw-area {
+    text-align: center;
+    padding: 30px 0;
+  }
+
+  .drawn-name {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 30px 0;
+    min-height: 60px;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .shuffling {
+    font-size: 2rem;
+    animation: shake 0.3s infinite;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  .remaining {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+  }
+
+  .remaining h3 {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    opacity: 0.9;
+  }
+
+  .remaining-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .remaining-tag {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+  }
+
+  .final-message {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .final-message h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+
+  .winner {
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 30px 0;
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% { text-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+    50% { text-shadow: 0 0 50px rgba(255, 215, 0, 0.9); }
+  }
+
+  .error {
+    color: #ffcccc;
+    background: rgba(255, 100, 100, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+
+  .error.show {
+    display: block;
+    animation: shake 0.5s;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ff6b6b);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 25px; }
+    h1 { font-size: 1.6rem; }
+    .drawn-name { font-size: 1.8rem; }
+    .winner { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎁 Amigo Secreto</h1>
+  <p class="subtitle">Faça seu sorteio de forma divertida!</p>
+
+  <!-- ETAPA 1: Quantidade -->
+  <div class="step active" id="step1">
+    <div class="input-group">
+      <label for="quantity">Quantos participantes? (2 a 10)</label>
+      <input type="number" id="quantity" min="2" max="10" placeholder="Ex: 5">
+    </div>
+    <div class="error" id="error1">Digite um número entre 2 e 10!</div>
+    <button class="btn" onclick="goToStep2()">Continuar →</button>
+  </div>
+
+  <!-- ETAPA 2: Nomes -->
+  <div class="step" id="step2">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+    <div id="namesContainer"></div>
+    <div class="error" id="error2">Preencha todos os nomes!</div>
+    <button class="btn" onclick="startDraw()">🎲 Iniciar Sorteio</button>
+  </div>
+
+  <!-- ETAPA 3: Sorteio -->
+  <div class="step" id="step3">
+    <div class="draw-area">
+      <h2 id="drawTitle">Sorteio em andamento...</h2>
+      <div class="drawn-name" id="drawnName">?</div>
+      <div class="remaining" id="remainingBox">
+        <h3>Ainda participando:</h3>
+        <div class="remaining-list" id="remainingList"></div>
+      </div>
+      <button class="btn btn-secondary" id="nextBtn" onclick="nextDraw()">🎯 Próximo Sorteio</button>
+    </div>
+  </div>
+
+  <!-- ETAPA 4: Final -->
+  <div class="step" id="step4">
+    <div class="final-message">
+      <h2>🎊 Sorteio Finalizado! 🎊</h2>
+      <p>O último participante restante é:</p>
+      <div class="winner" id="winnerName"></div>
+      <button class="btn" onclick="restart()">🔄 Novo Sorteio</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+  let participants = [];
+  let remaining = [];
+  let currentStep = 1;
+
+  function showStep(step) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(`step${step}`).classList.add('active');
+    currentStep = step;
+  }
+
+  function goToStep2() {
+    const qty = parseInt(document.getElementById('quantity').value);
+    const error = document.getElementById('error1');
+    
+    if (isNaN(qty) || qty < 2 || qty > 10) {
+      error.classList.add('show');
+      setTimeout(() => error.classList.remove('show'), 3000);
+      return;
+    }
+
+    const container = document.getElementById('namesContainer');
+    container.innerHTML = '';
+    
+    const ordinals = ['primeiro', 'segundo', 'terceiro', 'quarto', 'quinto', 
+                      'sexto', 'sétimo', 'oitavo', 'nono', 'décimo'];
+    
+    for (let i = 0; i < qty; i++) {
+      const group = document.createElement('div');
+      group.className = 'input-group';
+      group.innerHTML = `
+        <label>Participante ${i + 1} (${ordinals[i]} nome)</label>
+        <input type="text" class="name-input" placeholder="Digite o nome" maxlength="30">
+      `;
+      container.appendChild(group);
+    }
+    
+    showStep(2);
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const inputs = document.querySelectorAll('.name-input');
+    const filled = Array.from(inputs).filter(i => i.value.trim() !== '').length;
+    const percent = (filled / inputs.length) * 100;
+    document.getElementById('progress').style.width = percent + '%';
+  }
+
+  document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('name-input')) {
+      updateProgress();
+    }
+  });
+
+  function startDraw() {
+    const inputs = document.querySelectorAll('.name-input');
+    const names = Array.from(inputs).map(i => i.value.trim());
+    const error = document.getElementById('error2');
+    
+    if (names.some(n => n === '')) {
+      error.classList.add('show');
+      setTimeout(() => error.classList.remove('show'), 3000);
+      return;
+    }
+
+    participants = [...names];
+    remaining = [...names];
+    showStep(3);
+    document.getElementById('drawTitle').textContent = 'Realizando sorteio...';
+    document.getElementById('drawnName').textContent = '?';
+    updateRemaining();
+  }
+
+  function updateRemaining() {
+    const list = document.getElementById('remainingList');
+    list.innerHTML = '';
+    remaining.forEach(name => {
+      const tag = document.createElement('span');
+      tag.className = 'remaining-tag';
+      tag.textContent = name;
+      list.appendChild(tag);
+    });
+  }
+
+  function nextDraw() {
+    const drawnNameEl = document.getElementById('drawnName');
+    const nextBtn = document.getElementById('nextBtn');
+    
+    // Efeito de embaralhamento
+    drawnNameEl.classList.remove('shuffling');
+    drawnNameEl.classList.add('shuffling');
+    nextBtn.disabled = true;
+    
+    let shuffleCount = 0;
+    const shuffleInterval = setInterval(() => {
+      const randomName = remaining[Math.floor(Math.random() * remaining.length)];
+      drawnNameEl.textContent = randomName;
+      shuffleCount++;
+      if (shuffleCount > 15) {
+        clearInterval(shuffleInterval);
+        revealDraw();
+      }
+    }, 80);
+  }
+
+  function revealDraw() {
+    const drawnNameEl = document.getElementById('drawnName');
+    const nextBtn = document.getElementById('nextBtn');
+    
+    const drawn = remaining[Math.floor(Math.random() * remaining.length)];
+    remaining = remaining.filter(n => n !== drawn);
+    
+    drawnNameEl.classList.remove('shuffling');
+    drawnNameEl.textContent = drawn.toUpperCase();
+    drawnNameEl.style.animation = 'none';
+    setTimeout(() => drawnNameEl.style.animation = 'popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)', 10);
+    
+    launchConfetti();
+    updateRemaining();
+
+    if (remaining.length === 0) {
+      nextBtn.textContent = '🏆 Ver Resultado Final';
+      nextBtn.disabled = false;
+      nextBtn.onclick = showFinal;
+    } else if (remaining.length === 1) {
+      nextBtn.textContent = '🎯 Último Sorteio';
+      nextBtn.disabled = false;
+    } else {
+      nextBtn.disabled = false;
+    }
+  }
+
+  function showFinal() {
+    document.getElementById('winnerName').textContent = participants[participants.length - 1] 
+      ? participants[participants.length - 1].toUpperCase() 
+      : document.getElementById('drawnName').textContent;
+    showStep(4);
+    launchConfetti();
+    setTimeout(launchConfetti, 500);
+    setTimeout(launchConfetti, 1000);
+  }
+
+  function restart() {
+    participants = [];
+    remaining = [];
+    document.getElementById('quantity').value = '';
+    document.getElementById('nextBtn').textContent = '🎯 Próximo Sorteio';
+    document.getElementById('nextBtn').onclick = nextDraw;
+    showStep(1);
+  }
+
+  // Confetti simples
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '9999';
+
+    const colors = ['#ff6b6b', '#ffd700', '#4facfe', '#f093fb', '#00f2fe', '#43e97b'];
+    const confetti = [];
+
+    for (let i = 0; i < 100; i++) {
+      confetti.push({
+        x: Math.random() * canvas.width,
+        y: -20,
+        size: Math.random() * 8 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speedY: Math.random() * 3 + 2,
+        speedX: (Math.random() - 0.5) * 4,
+        rotation: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 10
+      });
+    }
+
+    let frames = 0;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti.forEach(c => {
+        c.y += c.speedY;
+        c.x += c.speedX;
+        c.rotation += c.rotSpeed;
+        
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rotation * Math.PI / 180);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size);
+        ctx.restore();
+      });
+      
+      frames++;
+      if (frames < 150) {
+        requestAnimationFrame(animate);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    animate();
+  }
+
+  window.addEventListener('resize', () => {
+    const canvas = document.getElementById('confetti');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+</script>
+
+</body>
+</html>
